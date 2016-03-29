@@ -288,7 +288,7 @@ suite.addBatch({
 });
 
 function polygons(cells) {
-  cells.forEach(function(cell) { delete cell.point; delete cell.centroid; });
+  cells.forEach(function(cell) { delete cell.point; delete cell.centroid; delete cell.cell; });
   return cells;
 }
 

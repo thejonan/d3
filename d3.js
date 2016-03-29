@@ -5476,23 +5476,25 @@
     return b.y - a.y || b.x - a.x;
   }
   d3.geom.voronoi = function(points) {
-    var x = d3_geom_pointX, y = d3_geom_pointY, fx = x, fy = y, clipExtent = d3_geom_voronoiClipExtent;
+    var x = d3_geom_pointX, y = d3_geom_pointY, value = d3_geom_voronoiPointValue, fx = x, fy = y, fv = value, clipExtent = d3_geom_voronoiClipExtent;
     if (points) return voronoi(points);
     function voronoi(data) {
       var polys = polygons(sites(data));
       polys.forEach(function(polygon, i) {
         polygon.point = data[i];
+        delete polygon.cell;
       });
       return polys;
     }
     function polygons(sites) {
       var polys = new Array(sites.length), x0 = clipExtent[0][0], y0 = clipExtent[0][1], x1 = clipExtent[1][0], y1 = clipExtent[1][1];
       d3_geom_voronoi(sites, clipExtent).cells.forEach(function(cell, i) {
-        var edges = cell.edges, site = cell.site;
-        polys[i] = edges.length ? edges.map(function(e) {
+        var edges = cell.edges, site = cell.site, poly;
+        polys[i] = poly = edges.length ? edges.map(function(e) {
           var s = e.start();
           return [ s.x, s.y ];
         }) : site.x >= x0 && site.x <= x1 && site.y >= y0 && site.y <= y1 ? [ [ x0, y1 ], [ x1, y1 ], [ x1, y0 ], [ x0, y0 ] ] : [];
+        poly.cell = cell;
       });
       return polys;
     }
@@ -5501,6 +5503,7 @@
         return {
           x: Math.round(fx(d, i) / ε) * ε,
           y: Math.round(fy(d, i) / ε) * ε,
+          v: Math.round(fv(d, i) / ε) * ε,
           i: i
         };
       });
@@ -5531,7 +5534,6 @@
       });
       return triangles;
     };
-    voronoi.enrich = function(data) {};
     voronoi.centroidal = function(data, maxsteps, stepfn) {
       var err = 0, polys = null;
       if (typeof maxsteps === "function") stepfn = maxsteps, maxsteps = 100; else if (!maxsteps) maxsteps = 100;
@@ -5560,6 +5562,9 @@
     voronoi.y = function(_) {
       return arguments.length ? (fy = d3_functor(y = _), voronoi) : y;
     };
+    voronoi.value = function(_) {
+      return arguments.length ? (fv = d3_functor(value = _), voronoi) : value;
+    };
     voronoi.clipExtent = function(_) {
       if (!arguments.length) return clipExtent === d3_geom_voronoiClipExtent ? null : clipExtent;
       clipExtent = _ == null ? d3_geom_voronoiClipExtent : _;
@@ -5574,6 +5579,9 @@
   var d3_geom_voronoiClipExtent = [ [ -1e6, -1e6 ], [ 1e6, 1e6 ] ];
   function d3_geom_voronoiTriangleArea(a, b, c) {
     return (a.x - c.x) * (b.y - a.y) - (a.x - b.x) * (c.y - a.y);
+  }
+  function d3_geom_voronoiPointValue(d) {
+    return d[2] || 1;
   }
   d3.geom.delaunay = function(vertices) {
     return d3.geom.voronoi().triangles(vertices);
