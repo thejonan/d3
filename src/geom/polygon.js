@@ -51,6 +51,7 @@ d3_geom_polygonPrototype.centroid = function() {
 // Note: requires the clip polygon to be counterclockwise and convex.
 d3_geom_polygonPrototype.clip = function(subject) {
   var input,
+      subprot = subject.prototype,
       closed = d3_geom_polygonClosed(subject),
       i = -1,
       n = this.length - d3_geom_polygonClosed(this),
@@ -62,8 +63,8 @@ d3_geom_polygonPrototype.clip = function(subject) {
       d;
 
   while (++i < n) {
-    input = subject.slice();
-    subject.length = 0;
+    input = subject;
+    subject = [];
     b = this[i];
     c = input[(m = input.length - closed) - 1];
     j = -1;
@@ -83,7 +84,37 @@ d3_geom_polygonPrototype.clip = function(subject) {
     a = b;
   }
 
+  subject.prototype = subprot;
   return subject;
+};
+
+// Clips a single line to be entirely inside the polygon, 
+// or null if it is entirely outside.
+d3_geom_polygonPrototype.clipLine = function (line) {
+  var n = this.length - d3_geom_polygonClosed(this),
+      a = this[n - 1],
+      b,
+      c = line[0],
+      d = line[1];
+
+  for (var i = 0;i < n; ++i, a = b) {
+    b = this[i];
+    if (d3_geom_polygonInside(d, a, b)) {
+      if (!d3_geom_polygonInside(c, a, b)) {
+        c = d3_geom_polygonIntersect(c, d, a, b);
+      }
+    } 
+    else if (d3_geom_polygonInside(c, a, b)) {
+      d = d3_geom_polygonIntersect(c, d, a, b);
+    }
+    else {
+      return [];  
+    }
+
+    a = b;
+  }
+  
+  return [c, d];
 };
 
 function d3_geom_polygonInside(p, a, b) {

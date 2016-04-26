@@ -26,6 +26,18 @@ suite.addBatch({
       },
       "can clip a closed counterclockwise triangle": function(p) {
         assertPolygonInDelta(p.clip([[0.9, 0.5], [2, -1], [0.5, 0.1], [0.9, 0.5]]), [[0.9, 0.5], [1, 0.363636], [1, 0], [0.636363, 0], [0.5, 0.1], [0.9, 0.5]], 1e-4);
+      },
+      "can clip an inside line": function (p) {
+        assertPolygonInDelta(p.clipLine([[0.1, 0.1], [0.9, 0.9]]), [[0.1, 0.1], [0.9, 0.9]], 1e-4);
+      },
+      "can clip an outside line": function (p) {
+        assertPolygonInDelta(p.clipLine([[-1, -1], [2, 2]]), [[0, 0], [1, 1]], 1e-4);
+      },
+      "can clip a crossing line": function (p) {
+        assertPolygonInDelta(p.clipLine([[0.5, 0.5], [0.5, 1.5]]), [[0.5, 0.5], [0.5, 1]], 1e-4);
+      },
+      "can clip a distant line": function (p) {
+        assertPolygonInDelta(p.clipLine([[-1, -1], [2, -1]]), [], 1e-4);
       }
     },
     "closed clockwise unit square": {
@@ -80,6 +92,18 @@ suite.addBatch({
       },
       "can clip an closed counterclockwise triangle": function(p) {
         assertPolygonInDelta(p.clip([[0.9, 0.5], [2, -1], [0.5, 0.1], [0.9, 0.5]]), [[0.9, 0.5], [1, 0.363636], [1, 0], [0.636363, 0], [0.5, 0.1], [0.9, 0.5]], 1e-4);
+      },
+      "can clip an inside line": function (p) {
+        assertPolygonInDelta(p.clipLine([[0.1, 0.1], [0.9, 0.9]]), [[0.1, 0.1], [0.9, 0.9]], 1e-4);
+      },
+      "can clip an outside line": function (p) {
+        assertPolygonInDelta(p.clipLine([[-1, -1], [2, 2]]), [[0, 0], [1, 1]], 1e-4);
+      },
+      "can clip a crossing line": function (p) {
+        assertPolygonInDelta(p.clipLine([[0.5, 0.5], [0.5, 1.5]]), [[0.5, 0.5], [0.5, 1]], 1e-4);
+      },
+      "can clip a distant line": function (p) {
+        assertPolygonInDelta(p.clipLine([[-1, -1], [2, -1]]), [], 1e-4);
       }
     },
     "open clockwise unit square": {
@@ -130,14 +154,14 @@ suite.addBatch({
   }
 });
 
-function assertPointInDelta(expected, actual, δ, message) {
+function assertPointInDelta(actual, expected, δ, message) {
   if (!δ) δ = 0;
   if (!pointInDelta(expected, actual, δ)) {
     assert.fail(JSON.stringify(actual), JSON.stringify(expected), message || "expected {expected}, got {actual}", "===", assertPointInDelta);
   }
 }
 
-function assertPolygonInDelta(expected, actual, δ, message) {
+function assertPolygonInDelta(actual, expected, δ, message) {
   if (!δ) δ = 0;
   if (expected.length !== actual.length || expected.some(function(e, i) { return !pointInDelta(e, actual[i], δ); })) {
     assert.fail(JSON.stringify(actual), JSON.stringify(expected), message || "expected {expected}, got {actual}", "===", assertPolygonInDelta);
