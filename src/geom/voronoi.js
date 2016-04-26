@@ -11,7 +11,7 @@ d3.geom.voronoi = function(points) {
       fx = x,
       fy = y,
       fv = value,
-      clipExtent = d3_geom_voronoiClipExtent;
+      clipPoly = d3_geom_voronoiClipPoly;
 
   // @deprecated; use voronoi(data) instead.
   if (points) return voronoi(points);
@@ -28,13 +28,9 @@ d3.geom.voronoi = function(points) {
   }
   
   function polygons(sites) {
-    var polys = new Array(sites.length),
-        x0 = clipExtent[0][0],
-        y0 = clipExtent[0][1],
-        x1 = clipExtent[1][0],
-        y1 = clipExtent[1][1];
+    var polys = new Array(sites.length);
 
-    d3_geom_voronoi(sites, clipExtent).cells.forEach(function(cell, i) {
+    d3_geom_voronoi(sites, clipPoly).cells.forEach(function(cell, i) {
       var edges = cell.edges,
           site = cell.site,
           poly;
@@ -163,7 +159,7 @@ d3.geom.voronoi = function(points) {
   return voronoi;
 };
 
-var d3_geom_voronoiClipExtent = [[-1e6, -1e6], [1e6, 1e6]];
+var d3_geom_voronoiClipPoly = [[-1e6, -1e6], [-1e6, 1e6], [1e6, 1e6], [1e6, -1e6]];
 
 function d3_geom_voronoiTriangleArea(a, b, c) {
   return (a.x - c.x) * (b.y - a.y) - (a.x - b.x) * (c.y - a.y);
