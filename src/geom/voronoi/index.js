@@ -15,7 +15,7 @@ import "clip";
 import "edge";
 import "red-black";
 
-function d3_geom_voronoi(sites, bbox) {
+function d3_geom_voronoi(sites, bounds) {
   var site = sites.sort(d3_geom_voronoiVertexOrder).pop(),
       x0,
       y0,
@@ -42,7 +42,7 @@ function d3_geom_voronoi(sites, bbox) {
     }
   }
 
-  if (bbox) d3_geom_voronoiClipEdges(bbox), d3_geom_voronoiCloseCells(bbox);
+  if (bounds) d3_geom_voronoiClipEdges(bounds), d3_geom_voronoiCloseCells(bounds);
 
   var diagram = {cells: d3_geom_voronoiCells, edges: d3_geom_voronoiEdges};
 

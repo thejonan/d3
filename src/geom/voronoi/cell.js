@@ -19,7 +19,7 @@ d3_geom_voronoiCell.prototype.prepare = function() {
   return halfEdges.length;
 };
 
-function d3_geom_voronoiCloseCells(extent) {
+function d3_geom_voronoiCloseCells(bounds) {
   var x0 = extent[0][0],
       x1 = extent[1][0],
       y0 = extent[0][1],

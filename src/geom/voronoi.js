@@ -35,7 +35,7 @@ d3.geom.voronoi = function(points) {
           site = cell.site,
           poly;
         polys[i] = poly = edges.length ? edges.map(function(e) { var s = e.start(); return [s.x, s.y]; })
-          : site.x >= x0 && site.x <= x1 && site.y >= y0 && site.y <= y1 ? [[x0, y1], [x1, y1], [x1, y0], [x0, y0]]
+          : clipPoly.inside([site.x, site.y]) ? clipPoly.extent()
           : [];
         poly.cell = cell;
     });
@@ -144,22 +144,29 @@ d3.geom.voronoi = function(points) {
     return arguments.length ? (fv = d3_functor(value = _), voronoi) : value;
   };
   
-  voronoi.clipExtent = function(_) {
-    if (!arguments.length) return clipExtent === d3_geom_voronoiClipExtent ? null : clipExtent;
-    clipExtent = _ == null ? d3_geom_voronoiClipExtent : _;
+  voronoi.clipPoly = function(_) {
+    if (!arguments.length) return clipPoly === d3_geom_voronoiClipPoly ? null : clipPoly;
+    clipPoly = _ == null ? d3_geom_voronoiClipPoly : _;
     return voronoi;
   };
   
-  // @deprecated; use clipExtent instead.
+  // @deprecated; use clipPoly instead.
+  voronoi.clipExtent = function(_) {
+    if (!arguments.length) return clipPoly === d3_geom_voronoiClipPoly ? null : clipPoly.extent();
+    clipPoly = _ == null ? d3_geom_voronoiClipPoly : d3.geom.polygon(_);
+    return voronoi;
+  };
+  
+  // @deprecated; use clipPoly instead.
   voronoi.size = function(_) {
-    if (!arguments.length) return clipExtent === d3_geom_voronoiClipExtent ? null : clipExtent && clipExtent[1];
+    if (!arguments.length) return clipPoly === d3_geom_voronoiClipPoly ? null : clipPoly.extent()[1];
     return voronoi.clipExtent(_ && [[0, 0], _]);
   };
 
   return voronoi;
 };
 
-var d3_geom_voronoiClipPoly = [[-1e6, -1e6], [-1e6, 1e6], [1e6, 1e6], [1e6, -1e6]];
+var d3_geom_voronoiClipPoly = d3.geom.polygon([[-1e6, -1e6], [-1e6, 1e6], [1e6, 1e6], [1e6, -1e6]]);
 
 function d3_geom_voronoiTriangleArea(a, b, c) {
   return (a.x - c.x) * (b.y - a.y) - (a.x - b.x) * (c.y - a.y);
