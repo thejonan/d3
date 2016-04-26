@@ -4898,14 +4898,17 @@
         if (!d3_geom_polygonInside(c, a, b)) {
           c = d3_geom_polygonIntersect(c, d, a, b);
         }
-      } else if (d3_geom_polygonInside(c, a, b)) {
-        d = d3_geom_polygonIntersect(c, d, a, b);
-      } else {
-        return [];
-      }
-      a = b;
+      } else if (d3_geom_polygonInside(c, a, b)) d = d3_geom_polygonIntersect(c, d, a, b); else return [];
     }
     return [ c, d ];
+  };
+  d3_geom_polygonPrototype.inside = function(point) {
+    var n = this.length - d3_geom_polygonClosed(this), a = this[n - 1], b;
+    for (var i = 0; i < n; ++i, a = b) {
+      b = this[i];
+      if (!d3_geom_polygonInside(point, a, b)) return;
+    }
+    return true;
   };
   function d3_geom_polygonInside(p, a, b) {
     return (b[0] - a[0]) * (p[1] - a[1]) < (b[1] - a[1]) * (p[0] - a[0]);

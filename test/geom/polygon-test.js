@@ -38,6 +38,12 @@ suite.addBatch({
       },
       "can clip a distant line": function (p) {
         assertPolygonInDelta(p.clipLine([[-1, -1], [2, -1]]), [], 1e-4);
+      },
+      "point is inside": function (p) {
+        assert.ok(p.inside([0.3, 0.9]));
+      },
+      "point is outside": function (p) {
+        assert.ok(!p.inside([1.3, 0.9]));
       }
     },
     "closed clockwise unit square": {
@@ -104,6 +110,12 @@ suite.addBatch({
       },
       "can clip a distant line": function (p) {
         assertPolygonInDelta(p.clipLine([[-1, -1], [2, -1]]), [], 1e-4);
+      },
+      "point is inside": function (p) {
+        assert.ok(p.inside([0.3, 0.9]));
+      },
+      "point is outside": function (p) {
+        assert.ok(!p.inside([1.3, 0.9]));
       }
     },
     "open clockwise unit square": {

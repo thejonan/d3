@@ -104,17 +104,27 @@ d3_geom_polygonPrototype.clipLine = function (line) {
         c = d3_geom_polygonIntersect(c, d, a, b);
       }
     } 
-    else if (d3_geom_polygonInside(c, a, b)) {
+    else if (d3_geom_polygonInside(c, a, b))
       d = d3_geom_polygonIntersect(c, d, a, b);
-    }
-    else {
+    else
       return [];  
-    }
-
-    a = b;
   }
   
   return [c, d];
+};
+
+d3_geom_polygonPrototype.inside = function (point) {
+  var n = this.length - d3_geom_polygonClosed(this),
+      a = this[n - 1],
+      b;
+
+  for (var i = 0;i < n; ++i, a = b) {
+    b = this[i];
+    if (!d3_geom_polygonInside(point, a, b))
+      return;
+  }
+  
+  return true;
 };
 
 function d3_geom_polygonInside(p, a, b) {
