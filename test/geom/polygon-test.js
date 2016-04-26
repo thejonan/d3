@@ -61,6 +61,9 @@ suite.addBatch({
       },
       "is not currently supported for clipping": function(p) {
         // because clipping requires a counterclockwise source polygon
+      },
+      "extent is the same": function (p) {
+        assert.deepEqual(p.extent(), [[0, 0], [1, 1]]);
       }
     },
     "closed clockwise triangle": {
@@ -78,6 +81,9 @@ suite.addBatch({
       },
       "is not currently supported for clipping": function(p) {
         // because clipping requires a counterclockwise source polygon
+      },
+      "extent of the triangle": function (p) {
+        assert.deepEqual(p.extent(), [[1, 1], [3, 3]]);
       }
     },
     "open counterclockwise unit square": {
@@ -147,6 +153,9 @@ suite.addBatch({
       },
       "has centroid ⟨2,2⟩": function(p) {
         assertPointInDelta(p.centroid(), [2, 2]);
+      },
+      "extent of the triangle": function (p) {
+        assert.deepEqual(p.extent(), [[1, 1], [3, 3]]);
       }
     },
     "large square": {

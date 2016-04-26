@@ -4910,6 +4910,15 @@
     }
     return true;
   };
+  d3_geom_polygonPrototype.extent = function() {
+    var min = [ 1e6, 1e6 ], max = [ -1e6, -1e6 ], a;
+    for (var i = 0; i < this.length; ++i) {
+      a = this[i];
+      if (a[0] < min[0]) min[0] = a[0]; else if (a[0] > max[0]) max[0] = a[0];
+      if (a[1] < min[1]) min[1] = a[1]; else if (a[1] > max[1]) max[1] = a[1];
+    }
+    return [ min, max ];
+  };
   function d3_geom_polygonInside(p, a, b) {
     return (b[0] - a[0]) * (p[1] - a[1]) < (b[1] - a[1]) * (p[0] - a[0]);
   }
