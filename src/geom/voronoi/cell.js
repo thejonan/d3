@@ -1,10 +1,11 @@
-import "../../math/abs";
+import "../polygon";
 
 function d3_geom_voronoiCell(site) {
   this.site = site;
   this.edges = [];
 }
 
+// sort and remove those, which correposnd to disconnected edges
 d3_geom_voronoiCell.prototype.prepare = function() {
   var halfEdges = this.edges,
       iHalfEdge = halfEdges.length,
@@ -20,40 +21,48 @@ d3_geom_voronoiCell.prototype.prepare = function() {
 };
 
 function d3_geom_voronoiCloseCells(bounds) {
-  var x0 = extent[0][0],
-      x1 = extent[1][0],
-      y0 = extent[0][1],
-      y1 = extent[1][1],
-      x2,
-      y2,
-      x3,
-      y3,
+  var p1, p2, p3, p4,
       cells = d3_geom_voronoiCells,
       iCell = cells.length,
       cell,
-      iHalfEdge,
-      halfEdges,
-      nHalfEdges,
-      start,
-      end;
+      iHalfEdge, halfEdges, nHalfEdges,
+      start, end,
+      ba, bb, j, oldI, oldInside, inside,
+      newEdges;
 
   while (iCell--) {
     cell = cells[iCell];
     if (!cell || !cell.prepare()) continue;
+    
     halfEdges = cell.edges;
     nHalfEdges = halfEdges.length;
     iHalfEdge = 0;
+    
     while (iHalfEdge < nHalfEdges) {
-      end = halfEdges[iHalfEdge].end(), x3 = end.x, y3 = end.y;
-      start = halfEdges[++iHalfEdge % nHalfEdges].start(), x2 = start.x, y2 = start.y;
-      if (abs(x3 - x2) > ε || abs(y3 - y2) > ε) {
-        halfEdges.splice(iHalfEdge, 0, new d3_geom_voronoiHalfEdge(d3_geom_voronoiCreateBorderEdge(cell.site, end,
-            abs(x3 - x0) < ε && y1 - y3 > ε ? {x: x0, y: abs(x2 - x0) < ε ? y2 : y1}
-            : abs(y3 - y1) < ε && x1 - x3 > ε ? {x: abs(y2 - y1) < ε ? x2 : x1, y: y1}
-            : abs(x3 - x1) < ε && y3 - y0 > ε ? {x: x1, y: abs(x2 - x1) < ε ? y2 : y0}
-            : abs(y3 - y0) < ε && x3 - x0 > ε ? {x: abs(y2 - y0) < ε ? x2 : x0, y: y0}
-            : null), cell.site, null));
-        ++nHalfEdges;
+      end = halfEdges[oldI = iHalfEdge].end(), p2 = d3_geom_pointFromVertex(end);
+      start = halfEdges[++iHalfEdge % nHalfEdges].start(), p3 = d3_geom_pointFromVertex(start);
+      if (!d3_geom_pointsEqual(p2, p3)) {
+        newEdges = [];
+        p1 = d3_geom_pointFromVertex(halfEdges[oldI].start());
+        p4 = d3_geom_pointFromVertex(halfEdges[iHalfEdge].end());
+        
+        // add the part of bounding polygon, that is inside the existing edges.
+        ba = bounds[bounds.length - 1]; 
+        for (j = 0;j < bounds.length; ++j, ba = bb, oldInside = inside) {
+          bb = bounds[j];
+          inside = d3_geom_polygonInside(bb, p1, p2) && d3_geom_polygonInside(bb, p3, p4);
+          if (!inside && !oldInside)
+            continue;
+          else if (inside && oldInside) 
+            newEdges.push(new d3_geom_voronoiHalfEdge(d3_geom_voronoiCreateBorderEdge(cell.site, {x: ba[0], y: ba[1]}, {x: bb[0], y: bb[1]}), cell.site, null));
+          else if (!oldInside && inside)
+            newEdges.push(new d3_geom_voronoiHalfEdge(d3_geom_voronoiCreateBorderEdge(cell.site, end, {x: bb[0], y: bb[1]}), cell.site, null));
+          else
+            newEdges.push(new d3_geom_voronoiHalfEdge(d3_geom_voronoiCreateBorderEdge(cell.site, {x: ba[0], y: ba[1]}, start), cell.site, null));
+        }
+        
+        newEdges.sort(d3_geom_voronoiHalfEdgeOrder);
+        halfEdges.splice(iHalfEdge, 0, newEdges);
       }
     }
   }
@@ -61,4 +70,8 @@ function d3_geom_voronoiCloseCells(bounds) {
 
 function d3_geom_voronoiHalfEdgeOrder(a, b) {
   return b.angle - a.angle;
+}
+
+function d3_geom_pointFromVertex(v) {
+  return [v.x, v.y];
 }

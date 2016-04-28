@@ -1,4 +1,5 @@
-import "../../math/trigonometry";
+import "../../math/abs";
+import "../polygon";
 
 var d3_geom_voronoiEdges,
     d3_geom_voronoiCells,

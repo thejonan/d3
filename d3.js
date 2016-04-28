@@ -4841,7 +4841,15 @@
     d3_subclass(coordinates, d3_geom_polygonPrototype);
     return coordinates;
   };
-  var d3_geom_polygonPrototype = d3.geom.polygon.prototype = [];
+  var d3_geom_polygonPrototype = d3.geom.polygon.prototype = Array.prototype;
+  d3_geom_polygonPrototype.closed = function() {
+    if (!d3_geom_polygonClosed(this)) this.push(this[this.length - 1]);
+    return this;
+  };
+  d3_geom_polygonPrototype.unclosed = function() {
+    if (d3_geom_polygonClosed(this)) this.pop();
+    return this;
+  };
   d3_geom_polygonPrototype.area = function() {
     var i = -1, n = this.length, a, b = this[n - 1], area = 0;
     while (++i < n) {
@@ -4919,6 +4927,9 @@
     }
     return [ min, max ];
   };
+  function d3_geom_pointsEqual(p1, p2) {
+    return abs(p1[0] - p2[0]) < ε && abs(p1[1] - p2[1]) < ε;
+  }
   function d3_geom_polygonInside(p, a, b) {
     return (b[0] - a[0]) * (p[1] - a[1]) < (b[1] - a[1]) * (p[0] - a[0]);
   }
@@ -4927,8 +4938,7 @@
     return [ x1 + ua * x21, y1 + ua * y21 ];
   }
   function d3_geom_polygonClosed(coordinates) {
-    var a = coordinates[0], b = coordinates[coordinates.length - 1];
-    return !(a[0] - b[0] || a[1] - b[1]);
+    return d3_geom_pointsEqual(coordinates[0], coordinates[coordinates.length - 1]);
   }
   var d3_geom_voronoiEdges, d3_geom_voronoiCells, d3_geom_voronoiBeaches, d3_geom_voronoiBeachPool = [], d3_geom_voronoiFirstCircle, d3_geom_voronoiCircles, d3_geom_voronoiCirclePool = [];
   function d3_geom_voronoiBeach() {
@@ -5067,8 +5077,8 @@
     halfEdges.sort(d3_geom_voronoiHalfEdgeOrder);
     return halfEdges.length;
   };
-  function d3_geom_voronoiCloseCells(extent) {
-    var x0 = extent[0][0], x1 = extent[1][0], y0 = extent[0][1], y1 = extent[1][1], x2, y2, x3, y3, cells = d3_geom_voronoiCells, iCell = cells.length, cell, iHalfEdge, halfEdges, nHalfEdges, start, end;
+  function d3_geom_voronoiCloseCells(bounds) {
+    var p1, p2, p3, p4, cells = d3_geom_voronoiCells, iCell = cells.length, cell, iHalfEdge, halfEdges, nHalfEdges, start, end, ba, bb, j, oldI, oldInside, inside, newEdges;
     while (iCell--) {
       cell = cells[iCell];
       if (!cell || !cell.prepare()) continue;
@@ -5076,29 +5086,41 @@
       nHalfEdges = halfEdges.length;
       iHalfEdge = 0;
       while (iHalfEdge < nHalfEdges) {
-        end = halfEdges[iHalfEdge].end(), x3 = end.x, y3 = end.y;
-        start = halfEdges[++iHalfEdge % nHalfEdges].start(), x2 = start.x, y2 = start.y;
-        if (abs(x3 - x2) > ε || abs(y3 - y2) > ε) {
-          halfEdges.splice(iHalfEdge, 0, new d3_geom_voronoiHalfEdge(d3_geom_voronoiCreateBorderEdge(cell.site, end, abs(x3 - x0) < ε && y1 - y3 > ε ? {
-            x: x0,
-            y: abs(x2 - x0) < ε ? y2 : y1
-          } : abs(y3 - y1) < ε && x1 - x3 > ε ? {
-            x: abs(y2 - y1) < ε ? x2 : x1,
-            y: y1
-          } : abs(x3 - x1) < ε && y3 - y0 > ε ? {
-            x: x1,
-            y: abs(x2 - x1) < ε ? y2 : y0
-          } : abs(y3 - y0) < ε && x3 - x0 > ε ? {
-            x: abs(y2 - y0) < ε ? x2 : x0,
-            y: y0
-          } : null), cell.site, null));
-          ++nHalfEdges;
+        end = halfEdges[oldI = iHalfEdge].end(), p2 = d3_geom_pointFromVertex(end);
+        start = halfEdges[++iHalfEdge % nHalfEdges].start(), p3 = d3_geom_pointFromVertex(start);
+        if (!d3_geom_pointsEqual(p2, p3)) {
+          newEdges = [];
+          p1 = d3_geom_pointFromVertex(halfEdges[oldI].start());
+          p4 = d3_geom_pointFromVertex(halfEdges[iHalfEdge].end());
+          ba = bounds[bounds.length - 1];
+          for (j = 0; j < bounds.length; ++j, ba = bb, oldInside = inside) {
+            bb = bounds[j];
+            inside = d3_geom_polygonInside(bb, p1, p2) && d3_geom_polygonInside(bb, p3, p4);
+            if (!inside && !oldInside) continue; else if (inside && oldInside) newEdges.push(new d3_geom_voronoiHalfEdge(d3_geom_voronoiCreateBorderEdge(cell.site, {
+              x: ba[0],
+              y: ba[1]
+            }, {
+              x: bb[0],
+              y: bb[1]
+            }), cell.site, null)); else if (!oldInside && inside) newEdges.push(new d3_geom_voronoiHalfEdge(d3_geom_voronoiCreateBorderEdge(cell.site, end, {
+              x: bb[0],
+              y: bb[1]
+            }), cell.site, null)); else newEdges.push(new d3_geom_voronoiHalfEdge(d3_geom_voronoiCreateBorderEdge(cell.site, {
+              x: ba[0],
+              y: ba[1]
+            }, start), cell.site, null));
+          }
+          newEdges.sort(d3_geom_voronoiHalfEdgeOrder);
+          halfEdges.splice(iHalfEdge, 0, newEdges);
         }
       }
     }
   }
   function d3_geom_voronoiHalfEdgeOrder(a, b) {
     return b.angle - a.angle;
+  }
+  function d3_geom_pointFromVertex(v) {
+    return [ v.x, v.y ];
   }
   function d3_geom_voronoiCircle() {
     d3_geom_voronoiRedBlackNode(this);
@@ -5147,20 +5169,29 @@
       arc.circle = null;
     }
   }
-  function d3_geom_voronoiClipEdges(extent) {
-    var edges = d3_geom_voronoiEdges, clip = d3_geom_clipLine(extent[0][0], extent[0][1], extent[1][0], extent[1][1]), i = edges.length, e;
+  function d3_geom_voronoiClipEdges(bounds) {
+    var edges = d3_geom_voronoiEdges, i = edges.length, e;
     while (i--) {
       e = edges[i];
-      if (!d3_geom_voronoiConnectEdge(e, extent) || !clip(e) || abs(e.a.x - e.b.x) < ε && abs(e.a.y - e.b.y) < ε) {
+      if (!d3_geom_voronoiConnectEdge(e, bounds) || !d3_geom_voronoiClipConnectedEdge(e, bounds) || abs(e.a.x - e.b.x) < ε && abs(e.a.y - e.b.y) < ε) {
         e.a = e.b = null;
         edges.splice(i, 1);
       }
     }
   }
-  function d3_geom_voronoiConnectEdge(edge, extent) {
+  function d3_geom_voronoiClipConnectedEdge(edge, bounds) {
+    var line = bounds.clipLine([ [ edge.a.x, edge.a.y ], [ edge.b.x, edge.b.y ] ]);
+    if (!line.length) return false;
+    edge.a.x = line[0][0];
+    edge.a.y = line[0][1];
+    edge.b.x = line[1][0];
+    edge.b.y = line[1][1];
+    return true;
+  }
+  function d3_geom_voronoiConnectEdge(edge, bounds) {
     var vb = edge.b;
     if (vb) return true;
-    var va = edge.a, x0 = extent[0][0], x1 = extent[1][0], y0 = extent[0][1], y1 = extent[1][1], lSite = edge.l, rSite = edge.r, lx = lSite.x, ly = lSite.y, rx = rSite.x, ry = rSite.y, fx = (lx + rx) / 2, fy = (ly + ry) / 2, fm, fb;
+    var va = edge.a, extent = bounds.extent(), x0 = extent[0][0], x1 = extent[1][0], y0 = extent[0][1], y1 = extent[1][1], lSite = edge.l, rSite = edge.r, lx = lSite.x, ly = lSite.y, rx = rSite.x, ry = rSite.y, fx = (lx + rx) / 2, fy = (ly + ry) / 2, fm, fb;
     if (ry === ly) {
       if (fx < x0 || fx >= x1) return;
       if (lx > rx) {
@@ -5473,7 +5504,7 @@
     while (node.L) node = node.L;
     return node;
   }
-  function d3_geom_voronoi(sites, bbox) {
+  function d3_geom_voronoi(sites, bounds) {
     var site = sites.sort(d3_geom_voronoiVertexOrder).pop(), x0, y0, circle;
     d3_geom_voronoiEdges = [];
     d3_geom_voronoiCells = new Array(sites.length);
@@ -5494,7 +5525,7 @@
         break;
       }
     }
-    if (bbox) d3_geom_voronoiClipEdges(bbox), d3_geom_voronoiCloseCells(bbox);
+    if (bounds) d3_geom_voronoiClipEdges(bounds), d3_geom_voronoiCloseCells(bounds);
     var diagram = {
       cells: d3_geom_voronoiCells,
       edges: d3_geom_voronoiEdges
@@ -5506,7 +5537,7 @@
     return b.y - a.y || b.x - a.x;
   }
   d3.geom.voronoi = function(points) {
-    var x = d3_geom_pointX, y = d3_geom_pointY, value = d3_geom_voronoiPointValue, fx = x, fy = y, fv = value, clipExtent = d3_geom_voronoiClipExtent;
+    var x = d3_geom_pointX, y = d3_geom_pointY, value = d3_geom_voronoiPointValue, fx = x, fy = y, fv = value, clipPoly = d3_geom_voronoiClipPoly;
     if (points) return voronoi(points);
     function voronoi(data) {
       var polys = polygons(sites(data));
@@ -5517,13 +5548,13 @@
       return polys;
     }
     function polygons(sites) {
-      var polys = new Array(sites.length), x0 = clipExtent[0][0], y0 = clipExtent[0][1], x1 = clipExtent[1][0], y1 = clipExtent[1][1];
-      d3_geom_voronoi(sites, clipExtent).cells.forEach(function(cell, i) {
+      var polys = new Array(sites.length);
+      d3_geom_voronoi(sites, clipPoly).cells.forEach(function(cell, i) {
         var edges = cell.edges, site = cell.site, poly;
         polys[i] = poly = edges.length ? edges.map(function(e) {
           var s = e.start();
           return [ s.x, s.y ];
-        }) : site.x >= x0 && site.x <= x1 && site.y >= y0 && site.y <= y1 ? [ [ x0, y1 ], [ x1, y1 ], [ x1, y0 ], [ x0, y0 ] ] : [];
+        }) : clipPoly.inside([ site.x, site.y ]) ? clipPoly : [];
         poly.cell = cell;
       });
       return polys;
@@ -5595,18 +5626,23 @@
     voronoi.value = function(_) {
       return arguments.length ? (fv = d3_functor(value = _), voronoi) : value;
     };
+    voronoi.clipPoly = function(_) {
+      if (!arguments.length) return clipPoly === d3_geom_voronoiClipPoly ? null : clipPoly;
+      clipPoly = _ == null ? d3_geom_voronoiClipPoly : d3.geom.polygon(_).closed();
+      return voronoi;
+    };
     voronoi.clipExtent = function(_) {
-      if (!arguments.length) return clipExtent === d3_geom_voronoiClipExtent ? null : clipExtent;
-      clipExtent = _ == null ? d3_geom_voronoiClipExtent : _;
+      if (!arguments.length) return clipPoly === d3_geom_voronoiClipPoly ? null : clipPoly.extent();
+      clipPoly = _ == null ? d3_geom_voronoiClipPoly : d3.geom.polygon([ _[0], [ _[0][0], _[1][1] ], _[1], [ _[1][0], _[0][1] ] ]).closed();
       return voronoi;
     };
     voronoi.size = function(_) {
-      if (!arguments.length) return clipExtent === d3_geom_voronoiClipExtent ? null : clipExtent && clipExtent[1];
+      if (!arguments.length) return clipPoly === d3_geom_voronoiClipPoly ? null : clipPoly.extent()[1];
       return voronoi.clipExtent(_ && [ [ 0, 0 ], _ ]);
     };
     return voronoi;
   };
-  var d3_geom_voronoiClipExtent = [ [ -1e6, -1e6 ], [ 1e6, 1e6 ] ];
+  var d3_geom_voronoiClipPoly = d3.geom.polygon([ [ -1e6, -1e6 ], [ -1e6, 1e6 ], [ 1e6, 1e6 ], [ 1e6, -1e6 ] ]).closed();
   function d3_geom_voronoiTriangleArea(a, b, c) {
     return (a.x - c.x) * (b.y - a.y) - (a.x - b.x) * (c.y - a.y);
   }

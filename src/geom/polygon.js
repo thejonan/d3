@@ -1,4 +1,6 @@
 import "../core/subclass";
+import "../math/abs";
+import "../math/trigonometry";
 import "geom";
 
 d3.geom.polygon = function(coordinates) {
@@ -6,7 +8,19 @@ d3.geom.polygon = function(coordinates) {
   return coordinates;
 };
 
-var d3_geom_polygonPrototype = d3.geom.polygon.prototype = [];
+var d3_geom_polygonPrototype = d3.geom.polygon.prototype = Array.prototype;
+
+d3_geom_polygonPrototype.closed = function() {
+  if (!d3_geom_polygonClosed(this))
+    this.push(this[this.length - 1]);
+  return this;
+};
+
+d3_geom_polygonPrototype.unclosed = function() {
+  if (d3_geom_polygonClosed(this))
+    this.pop();
+  return this;
+};
 
 d3_geom_polygonPrototype.area = function() {
   var i = -1,
@@ -148,6 +162,10 @@ d3_geom_polygonPrototype.extent = function () {
   return [min, max];
 }
 
+function d3_geom_pointsEqual(p1, p2) {
+  return abs(p1[0] - p2[0]) < ε && abs(p1[1] - p2[1]) < ε;
+}
+
 function d3_geom_polygonInside(p, a, b) {
   return (b[0] - a[0]) * (p[1] - a[1]) < (b[1] - a[1]) * (p[0] - a[0]);
 }
@@ -162,7 +180,5 @@ function d3_geom_polygonIntersect(c, d, a, b) {
 
 // Returns true if the polygon is closed.
 function d3_geom_polygonClosed(coordinates) {
-  var a = coordinates[0],
-      b = coordinates[coordinates.length - 1];
-  return !(a[0] - b[0] || a[1] - b[1]);
+  return d3_geom_pointsEqual(coordinates[0], coordinates[coordinates.length - 1]);
 }

@@ -1,5 +1,7 @@
+import "../../math/trigonometry";
 import "../../math/abs";
 import "../polygon";
+
 
 function d3_geom_voronoiClipEdges(bounds) {
   var edges = d3_geom_voronoiEdges,
@@ -7,13 +9,25 @@ function d3_geom_voronoiClipEdges(bounds) {
       e;
   while (i--) {
     e = edges[i];
-    if (!d3_geom_voronoiConnectEdge(e, bounds)
-        || !bounds.clipLine([[e.a.x, e.a.y], [e.b.x, e.b.y]])
-        || (abs(e.a.x - e.b.x) < ε && abs(e.a.y - e.b.y) < ε)) {
+    if (    !d3_geom_voronoiConnectEdge(e, bounds)        // eliminate those outside of the extent of bounding polygon
+        ||  !d3_geom_voronoiClipConnectedEdge(e, bounds)  // eliminate those, which disappear after clipping
+        ||  (abs(e.a.x - e.b.x) < ε && abs(e.a.y - e.b.y) < ε)) { // i.e. eliminate too short ones.
       e.a = e.b = null;
       edges.splice(i, 1);
     }
   }
+}
+
+function d3_geom_voronoiClipConnectedEdge(edge, bounds) {
+  var line = bounds.clipLine([[edge.a.x, edge.a.y], [edge.b.x, edge.b.y]]);
+
+  if (!line.length) return false;
+    
+  edge.a.x = line[0][0];
+  edge.a.y = line[0][1];
+  edge.b.x = line[1][0];
+  edge.b.y = line[1][1];
+  return true;
 }
 
 function d3_geom_voronoiConnectEdge(edge, bounds) {
@@ -21,6 +35,7 @@ function d3_geom_voronoiConnectEdge(edge, bounds) {
   if (vb) return true;
 
   var va = edge.a,
+      extent = bounds.extent(),
       x0 = extent[0][0],
       x1 = extent[1][0],
       y0 = extent[0][1],
