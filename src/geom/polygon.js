@@ -12,7 +12,7 @@ var d3_geom_polygonPrototype = d3.geom.polygon.prototype = Array.prototype;
 
 d3_geom_polygonPrototype.closed = function() {
   if (!d3_geom_polygonClosed(this))
-    this.push(this[this.length - 1]);
+    this.push(this[0]);
   return this;
 };
 

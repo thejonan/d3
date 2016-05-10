@@ -203,7 +203,7 @@ suite.addBatch({
         },
         "returns the semi-infinite bounding box": function(cells) {
           assert.deepEqual(polygons(cells), [
-            [[-1e6, 1e6], [1e6, 1e6], [1e6, -1e6], [-1e6, -1e6]]
+            [[-1e6, -1e6], [-1e6, 1e6], [1e6, 1e6], [1e6, -1e6]]
           ]);
         },
         "the returned cell has positive area": function(cells) {
@@ -213,47 +213,47 @@ suite.addBatch({
       "with two points": {
         "separated by a horizontal line": function(voronoi) {
           assert.deepEqual(polygons(voronoi([[0, -100], [0, 100]])), [
-            [[-1e6, 0], [1e6, 0], [1e6, -1e6], [-1e6, -1e6]],
-            [[1e6, 0], [-1e6, 0], [-1e6, 1e6], [1e6, 1e6]],
+            [[-1e6, -1e6], [-1e6, 0], [1e6, 0], [1e6, -1e6]],
+            [[-1e6, 0], [-1e6, 1e6], [1e6, 1e6], [1e6, 0]],
           ]);
           assert.deepEqual(polygons(voronoi([[0, 100], [0, -100]])), [
-            [[1e6, 0], [-1e6, 0], [-1e6, 1e6], [1e6, 1e6]],
-            [[-1e6, 0], [1e6, 0], [1e6, -1e6], [-1e6, -1e6]]
+            [[-1e6, 0], [-1e6, 1e6], [1e6, 1e6], [1e6, 0]],
+            [[-1e6, -1e6], [-1e6, 0], [1e6, 0], [1e6, -1e6]]
           ]);
         },
         "separated by a vertical line": function(voronoi) {
           assert.deepEqual(polygons(voronoi([[100, 0], [-100, 0]])), [
             [[0, -1e6], [0, 1e6], [1e6, 1e6], [1e6, -1e6]],
-            [[0, 1e6], [0, -1e6], [-1e6, -1e6], [-1e6, 1e6]]
+            [[-1e6, -1e6], [-1e6, 1e6], [0, 1e6], [0, -1e6]]
           ]);
           assert.deepEqual(polygons(voronoi([[-100, 0], [100, 0]])), [
-            [[0, 1e6], [0, -1e6], [-1e6, -1e6], [-1e6, 1e6]],
+            [[-1e6, -1e6], [-1e6, 1e6], [0, 1e6], [0, -1e6]],
             [[0, -1e6], [0, 1e6], [1e6, 1e6], [1e6, -1e6]]
           ]);
         },
         "separated by a diagonal line": function(voronoi) {
           assert.deepEqual(polygons(voronoi([[-100, -100], [100, 100]])), [
-            [[-1e6, 1e6], [1e6, -1e6], [-1e6, -1e6]],
-            [[1e6, -1e6], [-1e6, 1e6], [1e6, 1e6]]
+            [[-1e6, -1e6], [-1e6, 1e6], [1e6, -1e6]],
+            [[-1e6, 1e6], [1e6, 1e6], [1e6, -1e6]]
           ]);
           assert.deepEqual(polygons(voronoi([[100, 100], [-100, -100]])), [
-            [[1e6, -1e6], [-1e6, 1e6], [1e6, 1e6]],
-            [[-1e6, 1e6], [1e6, -1e6], [-1e6, -1e6]]
+            [[-1e6, 1e6], [1e6, 1e6], [1e6, -1e6]],
+            [[-1e6, -1e6], [-1e6, 1e6], [1e6, -1e6]]
           ]);
         },
         "separated by an arbitrary diagonal": function(voronoi) {
           assert.deepEqual(polygons(voronoi([[-100, -100], [100, 0]])), [
-            [[-500025, 1e6], [499975, -1e6], [-1e6, -1e6], [-1e6, 1e6]],
-            [ [499975, -1e6], [-500025, 1e6], [1e6, 1e6], [1e6, -1e6]]
+            [[-1e6, -1e6], [-1e6, 1e6], [-500025, 1e6], [499975, -1e6]],
+            [[-500025, 1e6], [1e6, 1e6], [1e6, -1e6], [499975, -1e6]]
           ]);
         }
       },
       "with three points": {
         "collinear": function(voronoi) {
           assert.deepEqual(polygons(voronoi([[-100, -100], [0, 0], [100, 100]])), [
-            [[-1e6, 999900], [999900, -1e6], [-1e6, -1e6]],
-            [[-999900, 1e6], [1e6, -999900], [1e6, -1e6], [999900, -1e6], [-1e6, 999900], [-1e6, 1e6]],
-            [[1e6, -999900], [-999900, 1e6], [1e6, 1e6]]
+            [[-1e6, -1e6], [-1e6, 999900], [999900, -1e6]],
+            [[-1e6, 1e6], [-999900, 1e6], [1e6, -999900], [1e6, -1e6], [999900, -1e6], [-1e6, 999900]],
+            [[-999900, 1e6], [1e6, 1e6], [1e6, -999900]]
           ]);
         }
       }
