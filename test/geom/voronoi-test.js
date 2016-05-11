@@ -26,6 +26,20 @@ suite.addBatch({
           v.clipExtent(null);
         }
       },
+      "returns the configured clip polygon": function(v) {
+        try {
+          assert.deepEqual(v.clipPoly([[1, 2], [1, 4], [3, 4], [1, 3]]).clipExtent(), [[1, 2], [3, 4]]);
+        } finally {
+          v.clipExtent(null);
+        }
+      },
+      "returns the clip polygon as extent": function(v) {
+        try {
+          assert.deepEqual(v.clipPoly([[1, 2], [1, 4], [3, 4], [1, 3]]).clipPoly(), [[1, 2], [1, 4], [3, 4], [1, 3]]);
+        } finally {
+          v.clipExtent(null);
+        }
+      },
       "returns the configured size": function(v) {
         try {
           assert.deepEqual(v.size([1, 2]).size(), [1, 2]);
@@ -185,6 +199,71 @@ suite.addBatch({
             return cell.every(function(point) {
               return point[0] >= 0 && point[0] <= 960
                   && point[1] >= 0 && point[1] <= 500;
+            });
+          }));
+        }
+      }
+    },
+
+    "a voronoi layout with clip octagon [[0, 125], [0, 375], [240, 500], [720, 500], [960, 375], [960, 125], [720, 0], [240, 0]]": {
+      topic: function(voronoi) {
+        return voronoi()
+            .x(function(d) { return d.x; })
+            .y(function(d) { return d.y; })
+            .clipPoly([[0, 125], [0, 375], [240, 500], [720, 500], [960, 375], [960, 125], [720, 0], [240, 0]]);
+      },
+      "of two points": {
+        topic: function(v) {
+          return v([{x: 200, y: 200}, {x: 760, y: 300}]);
+        },
+        "returns two cells with the expected geometry": function(cells) {
+          assert.inDelta(cells, [
+            [[0, 125], [0, 375], [240, 500], [435.35714285715324, 500], [524.6428571428696, 0], [240, 0]],
+            [[435.35714285715324, 500], [720, 500], [960, 375], [960, 125], [720, 0], [524.6428571428696, 0]]
+          ], 1e-6);
+        },
+        "the returned cells are clipped to the layout size": function(cells) {
+          assert.isTrue(cells.every(function(cell) {
+            return cell.every(function(point) {
+              return point[0] >= 0 && point[0] <= 960
+                  && point[1] >= 0 && point[1] <= 500;
+            });
+          }));
+        }
+      }
+    },
+
+    "a voronoi layout with clip triangle [[0, 0], [100, 100], [200, 0]]": {
+      topic: function(voronoi) {
+        return voronoi()
+            .x(function(d) { return d.x; })
+            .y(function(d) { return d.y; })
+            .clipPoly([[0, 0], [100, 100], [200, 0]]);
+      },
+      "of one point": {
+        topic: function(v) {
+          return v([{x: 100, y: 50}]);
+        },
+        "returns the clipping triangle": function(cells) {
+          assert.deepEqual(polygons(cells), [[[0, 0], [100, 100], [200, 0]]]);
+        }
+      },
+      "of three points": {
+        topic: function(v) {
+          return v([{x: 40, y: 20}, {x: 160, y: 20}, {x: 100, y: 80}]);
+        },
+        "returns two cells with the expected geometry": function(cells) {
+          assert.inDelta(cells, [
+            [[0, 0], [60, 60], [100, 20], [100, 0]],
+            [[100, 0], [100, 20], [140, 60], [200, 0]],
+            [[60, 60], [100, 100], [140, 60], [100, 20]]
+          ], 1e-6);
+        },
+        "the returned cells are clipped to the layout size": function(cells) {
+          assert.isTrue(cells.every(function(cell) {
+            return cell.every(function(point) {
+              return point[0] >= 0 && point[0] <= 200
+                  && point[1] >= 0 && point[1] <= 100;
             });
           }));
         }
