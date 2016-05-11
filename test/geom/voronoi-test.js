@@ -59,8 +59,8 @@ suite.addBatch({
         },
         "returns two cells with the expected geometry": function(cells) {
           assert.inDelta(cells, [
-            [[-178046.7857142857, 1e6], [179096.07142857145, -1e6], [-1e6, -1e6], [-1e6, 1e6]],
-            [[179096.07142857145, -1e6], [-178046.7857142857, 1e6], [1e6, 1e6], [1e6, -1e6]]
+            [[-1e6, -1e6], [-1e6, 1e6], [-178046.7857142857, 1e6], [179096.07142857145, -1e6]],
+            [[-178046.7857142857, 1e6], [1e6, 1e6], [1e6, -1e6], [179096.07142857145, -1e6]]
           ], 1e-6);
         },
         "the returned cells are open polygons": function(cells) {
@@ -139,7 +139,7 @@ suite.addBatch({
         },
         "returns two cells with the expected geometry": function(cells) {
           assert.inDelta(cells, [
-            [[480, 1e6], [480, -1e6], [-1e6, -1e6], [-1e6, 1e6]],
+            [[-1e6, -1e6], [-1e6, 1e6], [480, 1e6], [480, -1e6]],
             [[480, -1e6], [480, 1e6], [1e6, 1e6], [1e6, -1e6]]
           ], 1e-6);
         }
@@ -176,8 +176,8 @@ suite.addBatch({
         },
         "returns two cells with the expected geometry": function(cells) {
           assert.inDelta(cells, [
-            [[435.35714285715324, 500], [524.6428571428696, 0], [0, 0], [0, 500]],
-            [[524.6428571428696, 0], [435.35714285715324, 500], [960, 500], [960, 0]]
+            [[0, 0], [0, 500], [435.35714285715324, 500], [524.6428571428696, 0]],
+            [[435.35714285715324, 500], [960, 500], [960, 0], [524.6428571428696, 0]]
           ], 1e-6);
         },
         "the returned cells are clipped to the layout size": function(cells) {
@@ -252,7 +252,7 @@ suite.addBatch({
         "collinear": function(voronoi) {
           assert.deepEqual(polygons(voronoi([[-100, -100], [0, 0], [100, 100]])), [
             [[-1e6, -1e6], [-1e6, 999900], [999900, -1e6]],
-            [[-1e6, 1e6], [-999900, 1e6], [1e6, -999900], [1e6, -1e6], [999900, -1e6], [-1e6, 999900]],
+            [[-1e6, 999900], [-1e6, 1e6], [-999900, 1e6], [1e6, -999900], [1e6, -1e6], [999900, -1e6]],
             [[-999900, 1e6], [1e6, 1e6], [1e6, -999900]]
           ]);
         }

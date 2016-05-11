@@ -6,10 +6,11 @@ import "../polygon";
 function d3_geom_voronoiClipEdges(bounds) {
   var edges = d3_geom_voronoiEdges,
       i = edges.length,
+      extent = bounds.extent(),
       e;
   while (i--) {
     e = edges[i];
-    if (    !d3_geom_voronoiConnectEdge(e, bounds)        // eliminate those outside of the extent of bounding polygon
+    if (    !d3_geom_voronoiConnectEdge(e, extent)        // eliminate those outside of the extent of bounding polygon
         ||  !d3_geom_voronoiClipConnectedEdge(e, bounds)  // eliminate those, which disappear after clipping
         ||  (abs(e.a.x - e.b.x) < ε && abs(e.a.y - e.b.y) < ε)) { // i.e. eliminate too short ones.
       e.a = e.b = null;
@@ -30,12 +31,11 @@ function d3_geom_voronoiClipConnectedEdge(edge, bounds) {
   return true;
 }
 
-function d3_geom_voronoiConnectEdge(edge, bounds) {
+function d3_geom_voronoiConnectEdge(edge, extent) {
   var vb = edge.b;
   if (vb) return true;
 
   var va = edge.a,
-      extent = bounds.extent(),
       x0 = extent[0][0],
       x1 = extent[1][0],
       y0 = extent[0][1],

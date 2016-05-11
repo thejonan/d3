@@ -5078,43 +5078,44 @@
     return halfEdges.length;
   };
   function d3_geom_voronoiCloseCells(bounds) {
-    var p1, p2, p3, p4, cells = d3_geom_voronoiCells, iCell = cells.length, cell, iHalfEdge, halfEdges, nHalfEdges, start, end, ba, bb, j, oldInside, inside, newEdges;
+    var p1, p2, p3, p4, cells = d3_geom_voronoiCells, iCell = cells.length, cell, iHalfEdge, halfEdges, nHalfEdges, start, end, ba, bb, j, oldInside, inside, newEdges, pointInside = function(p) {
+      return d3_geom_polygonInside(p, p1, p2) && d3_geom_polygonInside(p, p3, p4) && !d3_geom_polygonInside(p, p2, p3);
+    };
     while (iCell--) {
       cell = cells[iCell];
       if (!cell || !cell.prepare()) continue;
       halfEdges = cell.edges;
       nHalfEdges = halfEdges.length;
       iHalfEdge = 0;
+      newEdges = [];
       while (iHalfEdge < nHalfEdges) {
         end = halfEdges[iHalfEdge].end(), p2 = d3_geom_pointFromVertex(end);
         start = halfEdges[++iHalfEdge % nHalfEdges].start(), p3 = d3_geom_pointFromVertex(start);
         if (!d3_geom_pointsEqual(p2, p3)) {
-          newEdges = [];
           p1 = d3_geom_pointFromVertex(halfEdges[iHalfEdge - 1].start());
           p4 = d3_geom_pointFromVertex(halfEdges[iHalfEdge % nHalfEdges].end());
-          ba = bounds[bounds.length - 1];
-          oldInside = d3_geom_polygonInside(ba, p1, p2) && d3_geom_polygonInside(ba, p3, p4);
+          oldInside = pointInside(ba = bounds[bounds.length - 1]);
           for (j = 0; j < bounds.length; ++j, ba = bb, oldInside = inside) {
-            bb = bounds[j];
-            inside = d3_geom_polygonInside(bb, p1, p2) && d3_geom_polygonInside(bb, p3, p4);
-            if (!inside && !oldInside) continue; else if (inside && oldInside) newEdges.push(new d3_geom_voronoiHalfEdge(d3_geom_voronoiCreateBorderEdge(cell.site, {
-              x: bb[0],
-              y: bb[1]
+            inside = pointInside(bb = bounds[j]);
+            if (inside && oldInside) newEdges.push(new d3_geom_voronoiHalfEdge(d3_geom_voronoiCreateBorderEdge(cell.site, {
+              x: ba[0],
+              y: ba[1]
             }, {
-              x: ba[0],
-              y: ba[1]
-            }), cell.site, null)); else if (!oldInside && inside) newEdges.push(new d3_geom_voronoiHalfEdge(d3_geom_voronoiCreateBorderEdge(cell.site, {
               x: bb[0],
               y: bb[1]
-            }, end), cell.site, null)); else newEdges.push(new d3_geom_voronoiHalfEdge(d3_geom_voronoiCreateBorderEdge(cell.site, start, {
+            }), cell.site, null)); else if (!oldInside && inside) newEdges.push(new d3_geom_voronoiHalfEdge(d3_geom_voronoiCreateBorderEdge(cell.site, end, {
+              x: bb[0],
+              y: bb[1]
+            }), cell.site, null)); else if (oldInside && !inside) newEdges.push(new d3_geom_voronoiHalfEdge(d3_geom_voronoiCreateBorderEdge(cell.site, {
               x: ba[0],
               y: ba[1]
-            }), cell.site, null));
+            }, start), cell.site, null)); else if (!d3_geom_polygonInside(ba, p1, p2) && !d3_geom_polygonInside(bb, p3, p4) && !d3_geom_polygonInside(ba, p2, p3) && !d3_geom_polygonInside(bb, p2, p3)) newEdges.push(new d3_geom_voronoiHalfEdge(d3_geom_voronoiCreateBorderEdge(cell.site, end, start), cell.site, null));
           }
-          newEdges.sort(d3_geom_voronoiHalfEdgeOrder).reverse();
-          newEdges.splice(0, 0, iHalfEdge, 0);
-          halfEdges.splice.apply(halfEdges, newEdges);
         }
+      }
+      if (newEdges.length > 0) {
+        cell.edges = halfEdges.concat(newEdges);
+        cell.edges.sort(d3_geom_voronoiHalfEdgeOrder);
       }
     }
   }
@@ -5172,10 +5173,10 @@
     }
   }
   function d3_geom_voronoiClipEdges(bounds) {
-    var edges = d3_geom_voronoiEdges, i = edges.length, e;
+    var edges = d3_geom_voronoiEdges, i = edges.length, extent = bounds.extent(), e;
     while (i--) {
       e = edges[i];
-      if (!d3_geom_voronoiConnectEdge(e, bounds) || !d3_geom_voronoiClipConnectedEdge(e, bounds) || abs(e.a.x - e.b.x) < ε && abs(e.a.y - e.b.y) < ε) {
+      if (!d3_geom_voronoiConnectEdge(e, extent) || !d3_geom_voronoiClipConnectedEdge(e, bounds) || abs(e.a.x - e.b.x) < ε && abs(e.a.y - e.b.y) < ε) {
         e.a = e.b = null;
         edges.splice(i, 1);
       }
@@ -5190,10 +5191,10 @@
     edge.b.y = line[1][1];
     return true;
   }
-  function d3_geom_voronoiConnectEdge(edge, bounds) {
+  function d3_geom_voronoiConnectEdge(edge, extent) {
     var vb = edge.b;
     if (vb) return true;
-    var va = edge.a, extent = bounds.extent(), x0 = extent[0][0], x1 = extent[1][0], y0 = extent[0][1], y1 = extent[1][1], lSite = edge.l, rSite = edge.r, lx = lSite.x, ly = lSite.y, rx = rSite.x, ry = rSite.y, fx = (lx + rx) / 2, fy = (ly + ry) / 2, fm, fb;
+    var va = edge.a, x0 = extent[0][0], x1 = extent[1][0], y0 = extent[0][1], y1 = extent[1][1], lSite = edge.l, rSite = edge.r, lx = lSite.x, ly = lSite.y, rx = rSite.x, ry = rSite.y, fx = (lx + rx) / 2, fy = (ly + ry) / 2, fm, fb;
     if (ry === ly) {
       if (fx < x0 || fx >= x1) return;
       if (lx > rx) {
