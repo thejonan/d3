@@ -24,10 +24,8 @@ function d3_geom_voronoiClipConnectedEdge(edge, bounds) {
 
   if (!line.length) return false;
     
-  edge.a.x = line[0][0];
-  edge.a.y = line[0][1];
-  edge.b.x = line[1][0];
-  edge.b.y = line[1][1];
+  edge.a = { x:line[0][0], y:line[0][1] };
+  edge.b = { x:line[1][0], y:line[1][1] };
   return true;
 }
 

@@ -29,7 +29,7 @@ function d3_geom_voronoiCloseCells(bounds) {
       start, end,
       ba, bb, j, oldInside, inside,
       newEdges,
-      pointInside = function (p) { return d3_geom_polygonInside(p, p1, p2) && d3_geom_polygonInside(p, p3, p4) && !d3_geom_polygonInside(p, p2, p3); };
+      pointInside = function (p) { return d3_geom_polygonInside(p, p1, p2) && d3_geom_polygonInside(p, p3, p4) && d3_geom_polygonInside(p, p3, p2); };
 
   while (iCell--) {
     cell = cells[iCell];
@@ -57,8 +57,13 @@ function d3_geom_voronoiCloseCells(bounds) {
             newEdges.push(new d3_geom_voronoiHalfEdge(d3_geom_voronoiCreateBorderEdge(cell.site, end, {x: bb[0], y: bb[1]}), cell.site, null));
           else if (oldInside && !inside)
             newEdges.push(new d3_geom_voronoiHalfEdge(d3_geom_voronoiCreateBorderEdge(cell.site, {x: ba[0], y: ba[1]}, start), cell.site, null));
-          else if (!d3_geom_polygonInside(ba, p1, p2) && !d3_geom_polygonInside(bb, p3, p4) && !d3_geom_polygonInside(ba, p2, p3) && !d3_geom_polygonInside(bb, p2, p3))
-            newEdges.push(new d3_geom_voronoiHalfEdge(d3_geom_voronoiCreateBorderEdge(cell.site, end, start), cell.site, null));
+          else if (!d3_geom_polygonInside(ba, p1, p2) && !d3_geom_polygonInside(bb, p3, p4)) {
+            var m23 = [(p2[0] + p3[0]) / 2, (p2[1] + p3[1]) / 2];
+            if (abs(d3.geom.polygon([ba, m23, bb]).area()) < ε) {
+              newEdges.push(new d3_geom_voronoiHalfEdge(d3_geom_voronoiCreateBorderEdge(cell.site, end, start), cell.site, null));
+              break;
+            }
+          }
         }
       }
     }

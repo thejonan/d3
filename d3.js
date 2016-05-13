@@ -5079,7 +5079,7 @@
   };
   function d3_geom_voronoiCloseCells(bounds) {
     var p1, p2, p3, p4, cells = d3_geom_voronoiCells, iCell = cells.length, cell, iHalfEdge, halfEdges, nHalfEdges, start, end, ba, bb, j, oldInside, inside, newEdges, pointInside = function(p) {
-      return d3_geom_polygonInside(p, p1, p2) && d3_geom_polygonInside(p, p3, p4) && !d3_geom_polygonInside(p, p2, p3);
+      return d3_geom_polygonInside(p, p1, p2) && d3_geom_polygonInside(p, p3, p4) && d3_geom_polygonInside(p, p3, p2);
     };
     while (iCell--) {
       cell = cells[iCell];
@@ -5109,7 +5109,13 @@
             }), cell.site, null)); else if (oldInside && !inside) newEdges.push(new d3_geom_voronoiHalfEdge(d3_geom_voronoiCreateBorderEdge(cell.site, {
               x: ba[0],
               y: ba[1]
-            }, start), cell.site, null)); else if (!d3_geom_polygonInside(ba, p1, p2) && !d3_geom_polygonInside(bb, p3, p4) && !d3_geom_polygonInside(ba, p2, p3) && !d3_geom_polygonInside(bb, p2, p3)) newEdges.push(new d3_geom_voronoiHalfEdge(d3_geom_voronoiCreateBorderEdge(cell.site, end, start), cell.site, null));
+            }, start), cell.site, null)); else if (!d3_geom_polygonInside(ba, p1, p2) && !d3_geom_polygonInside(bb, p3, p4)) {
+              var m23 = [ (p2[0] + p3[0]) / 2, (p2[1] + p3[1]) / 2 ];
+              if (abs(d3.geom.polygon([ ba, m23, bb ]).area()) < ε) {
+                newEdges.push(new d3_geom_voronoiHalfEdge(d3_geom_voronoiCreateBorderEdge(cell.site, end, start), cell.site, null));
+                break;
+              }
+            }
           }
         }
       }
@@ -5185,10 +5191,14 @@
   function d3_geom_voronoiClipConnectedEdge(edge, bounds) {
     var line = bounds.clipLine([ [ edge.a.x, edge.a.y ], [ edge.b.x, edge.b.y ] ]);
     if (!line.length) return false;
-    edge.a.x = line[0][0];
-    edge.a.y = line[0][1];
-    edge.b.x = line[1][0];
-    edge.b.y = line[1][1];
+    edge.a = {
+      x: line[0][0],
+      y: line[0][1]
+    };
+    edge.b = {
+      x: line[1][0],
+      y: line[1][1]
+    };
     return true;
   }
   function d3_geom_voronoiConnectEdge(edge, extent) {
