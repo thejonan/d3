@@ -5625,7 +5625,7 @@
         if (err <= 1) break;
       }
       polys.forEach(function(p, i) {
-        p.centroid = cells[i];
+        p.site = cells[i];
         p.point = data[i];
       });
       return polys;

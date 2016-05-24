@@ -124,7 +124,7 @@ d3.geom.voronoi = function(points) {
 		}
 		
     polys.forEach(function (p, i) { 
-      p.centroid = cells[i];
+      p.site = cells[i];
       p.point = data[i];
     });		
 
