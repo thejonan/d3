@@ -64,6 +64,12 @@ suite.addBatch({
       },
       "extent is the same": function (p) {
         assert.deepEqual(p.extent(), [[0, 0], [1, 1]]);
+      },
+      "scale up" : function (p) {
+        assert.deepEqual(p.transform({ a: 2, b: 0, c: 0, d: 1, e: 0, f: 0}), [[0, 0], [2, 0], [2, 1], [0, 1], [0, 0]]);
+      },
+      "translate left" : function (p) {
+        assert.deepEqual(p.transform({ a: 1, b: 0, c: 0, d: 1, e: 1, f: 0}), [[1, 0], [2, 0], [2, 1], [1, 1], [1, 0]]);
       }
     },
     "closed clockwise triangle": {
@@ -84,6 +90,12 @@ suite.addBatch({
       },
       "extent of the triangle": function (p) {
         assert.deepEqual(p.extent(), [[1, 1], [3, 3]]);
+      },
+      "scale up" : function (p) {
+        assert.deepEqual(p.transform({ a: 2, b: 0, c: 0, d: 1, e: 0, f: 0}), [[2, 1], [6, 2], [4, 3], [2, 1]]);
+      },
+      "translate left" : function (p) {
+        assert.deepEqual(p.transform({ a: 1, b: 0, c: 0, d: 1, e: 1, f: 0}), [[2, 1], [4, 2], [3, 3], [2, 1]]);
       }
     },
     "open counterclockwise unit square": {

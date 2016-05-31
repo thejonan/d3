@@ -145,21 +145,34 @@ d3_geom_polygonPrototype.extent = function () {
   var min = [1e6, 1e6],
       max = [-1e6, -1e6],
       a;
-      
+        
   for (var i = 0;i < this.length; ++i) {
     a = this[i];
     if (a[0] < min[0])
       min[0] = a[0];
-    else if (a[0] > max[0])
+    if (a[0] > max[0])
       max[0] = a[0];
       
     if (a[1] < min[1])
       min[1] = a[1];
-    else if (a[1] > max[1])
+    if (a[1] > max[1])
       max[1] = a[1];
   }
   
   return [min, max];
+}
+
+d3_geom_polygonPrototype.transform = function (ctm) {
+  var out = new Array(this.length),
+      a;
+      
+  d3_subclass(out, d3_geom_polygonPrototype);
+  for (var i = 0;i < this.length; ++i) {
+    a = this[i];
+    out[i] = [ ctm.a * a[0] + ctm.c * a[1] + ctm.e, ctm.b * a[0] + ctm.d * a[1] + ctm.f ];
+  }
+  
+  return out;
 }
 
 function d3_geom_pointsEqual(p1, p2) {
