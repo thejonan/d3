@@ -5619,6 +5619,24 @@
       });
       return triangles;
     };
+    voronoi.cells = function(data) {
+      var cells = sites(data), polys = polygons(cells);
+      polys.forEach(function(p, i) {
+        p.site = p.cell.site;
+        p.point = data[i];
+      });
+      return polys;
+    };
+    voronoi.edges = function(data) {
+      var cells = sites(data), polys = polygons(cells);
+      polys.forEach(function(p, i) {
+        p.site = p.cell.site;
+        p.point = data[i];
+        p.edges = p.cell.edges;
+        delete p.cell;
+      });
+      return polys;
+    };
     voronoi.centroidal = function(data, maxsteps, stepfn) {
       var err = 0, polys = null;
       if (typeof maxsteps === "function") stepfn = maxsteps, maxsteps = 100; else if (!maxsteps) maxsteps = 100;

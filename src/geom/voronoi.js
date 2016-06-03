@@ -91,6 +91,32 @@ d3.geom.voronoi = function(points) {
     return triangles;
   };
   
+  voronoi.cells = function (data) {
+    var cells = sites(data),
+        polys = polygons(cells);
+
+    polys.forEach(function (p, i) {
+      p.site = p.cell.site;
+      p.point = data[i];
+    })
+    
+    return polys;
+  };
+
+  voronoi.edges = function (data) {
+    var cells = sites(data),
+        polys = polygons(cells);
+
+    polys.forEach(function (p, i) {
+      p.site = p.cell.site;
+      p.point = data[i];
+      p.edges = p.cell.edges;
+      delete p.cell;
+    })
+    
+    return polys;
+  };
+  
   // LLoyd relaxation for finding centroidal voronoi tessellation
   voronoi.centroidal = function(data, maxsteps, stepfn) {
 		var err = 0,
